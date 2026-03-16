@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Environment variables (CONFIDENTIAL)
+.env
+.env.*
+.env.local
+.env.production
+
+# Firebase service account keys (CONFIDENTIAL)
+**/config/**/firebase-service-account.json
+*-firebase-adminsdk-*.json
+
+# Build output
+.next/
+out/
+build/
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Firebase
+.firebase/
