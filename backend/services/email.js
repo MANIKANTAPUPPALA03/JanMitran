@@ -1,14 +1,8 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-    },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const fromEmail = process.env.RESEND_FROM_EMAIL || 'JanMitraN <onboarding@resend.dev>';
 
 const sectorEmails = {
     garbage: process.env.SECTOR_EMAIL_GARBAGE || '',
@@ -29,8 +23,8 @@ const sectorNames = {
 async function sendComplaintEmail(data) {
     const sectorEmail = sectorEmails[data.sector];
 
-    if (!sectorEmail || !process.env.SMTP_USER) {
-        console.warn('[Email] SMTP not configured or sector email missing, skipping department email.');
+    if (!sectorEmail || !process.env.RESEND_API_KEY) {
+        console.warn('[Email] Resend not configured or sector email missing, skipping department email.');
         return null;
     }
 
@@ -68,14 +62,20 @@ async function sendComplaintEmail(data) {
   `;
 
     try {
-        const info = await transporter.sendMail({
-            from: `"JanMitraN Portal" <${process.env.SMTP_USER}>`,
-            to: sectorEmail,
+        const { data: result, error } = await resend.emails.send({
+            from: fromEmail,
+            to: [sectorEmail],
             subject: `[${data.complaintId}] New Complaint: ${data.subject}`,
             html: htmlContent,
         });
-        console.log('[Email] Sent to department:', sectorEmail, '| MessageId:', info.messageId);
-        return info;
+
+        if (error) {
+            console.error('[Email] Resend error (department):', error);
+            return null;
+        }
+
+        console.log('[Email] Sent to department:', sectorEmail, '| Id:', result.id);
+        return result;
     } catch (error) {
         console.error('[Email] Failed to send department email:', error);
         return null;
@@ -83,8 +83,8 @@ async function sendComplaintEmail(data) {
 }
 
 async function sendCitizenConfirmationEmail(data) {
-    if (!data.email || !process.env.SMTP_USER) {
-        console.warn('[Email] Citizen email or SMTP not configured, skipping confirmation.');
+    if (!data.email || !process.env.RESEND_API_KEY) {
+        console.warn('[Email] Citizen email or Resend not configured, skipping confirmation.');
         return null;
     }
 
@@ -141,14 +141,20 @@ async function sendCitizenConfirmationEmail(data) {
   `;
 
     try {
-        const info = await transporter.sendMail({
-            from: `"JanMitraN Portal" <${process.env.SMTP_USER}>`,
-            to: data.email,
+        const { data: result, error } = await resend.emails.send({
+            from: fromEmail,
+            to: [data.email],
             subject: `[${data.complaintId}] Your Complaint Has Been Registered — JanMitraN`,
             html: htmlContent,
         });
-        console.log('[Email] Confirmation sent to citizen:', data.email, '| MessageId:', info.messageId);
-        return info;
+
+        if (error) {
+            console.error('[Email] Resend error (citizen):', error);
+            return null;
+        }
+
+        console.log('[Email] Confirmation sent to citizen:', data.email, '| Id:', result.id);
+        return result;
     } catch (error) {
         console.error('[Email] Failed to send citizen confirmation:', error);
         return null;
