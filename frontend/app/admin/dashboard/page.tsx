@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ComplaintCard, type Complaint } from '@/components/admin/complaint-card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ type FilterStatus = 'all' | 'open' | 'in-progress' | 'resolved';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -279,5 +279,13 @@ export default function AdminDashboard() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" /></div>}>
+      <AdminDashboardContent />
+    </Suspense>
   );
 }
